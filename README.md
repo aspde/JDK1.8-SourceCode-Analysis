@@ -16,7 +16,7 @@
 例：-Xbootclasspath/p:"F:\projects\JDK1.8-SourceCode-Analysis\target\classes"
 3. 自由添加注释不影响调试：File -> Project Structure -> SDKs -> SourcePath -> 添加文件路径在最上面，  
 例：F:\projects\JDK1.8-SourceCode-Analysis\src\main\java，其他可以删了重建
-4. 消除错误和警告：File -> Project Structure -> Project -> Language Level（设置10-Local variable type inference），
+4. 消除错误和警告：File -> Project Structure -> Project -> Language Level（设置10），  
 解决JapaneseDate类的错误
 
 参考链接：[曹工力荐：调试 jdk 中 rt.jar 包部分的源码（可自由增加注释，修改代码并debug）](https://www.cnblogs.com/grey-wolf/p/12817615.html)
