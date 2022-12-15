@@ -1131,6 +1131,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         w.unlock(); // allow interrupts
         boolean completedAbruptly = true;
         try {
+            // 实现线程复用的主要逻辑
             while (task != null || (task = getTask()) != null) {
                 w.lock();
                 // If pool is stopping, ensure thread is interrupted;
@@ -1340,6 +1341,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * @throws NullPointerException if {@code command} is null
      */
     public void execute(Runnable command) {
+        // 判断command，也就是Runnable任务是否等于null，如果为null就抛出异常
         if (command == null)
             throw new NullPointerException();
         /*
@@ -1363,18 +1365,23 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          * and so reject the task.
          */
         int c = ctl.get();
+        // 判断当前线程数是否小于核心线程数，如果小于核心线程数就调用addWorker()方法增加一个 Worker，这里的Worker可以理解为一个线程
         if (workerCountOf(c) < corePoolSize) {
+            // 在线程池中创建一个线程并执行第一个参数传入的任务，第二个参数的含义是以核心线程数为界限还是以最大线程数为界限进行是否新增线程的判断
             if (addWorker(command, true))
                 return;
             c = ctl.get();
         }
+        // 检查线程池状态是否为Running，如果线程池状态是Running就把任务放入任务队列中
         if (isRunning(c) && workQueue.offer(command)) {
             int recheck = ctl.get();
+            // 如果线程池已经不处于Running状态，说明线程池被关闭，那么就移除刚刚添加到任务队列中的任务，并执行拒绝策略
             if (! isRunning(recheck) && remove(command))
                 reject(command);
+            // 当任务被添加进来之后就需要防止没有可执行线程的情况发生，所以此时如果检查当前线程数为0，那就执行addWorker()方法新建线程
             else if (workerCountOf(recheck) == 0)
                 addWorker(null, false);
-        }
+        }// 以maxPoolSize为上限创建新的worker，返回false代表任务添加失败，说明当前线程数已经达到maxPoolSize，然后执行拒绝策略reject方法
         else if (!addWorker(command, false))
             reject(command);
     }

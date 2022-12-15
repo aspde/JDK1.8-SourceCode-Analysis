@@ -203,6 +203,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * acquire on failure.
          */
         final void lock() {
+            // 无论是否已经有线程在排队，都会尝试获取一下锁，获取不到的话，再去排队
             if (compareAndSetState(0, 1))
                 setExclusiveOwnerThread(Thread.currentThread());
             else
@@ -232,6 +233,8 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
+                // 判断在等待队列中是否已经有线程在排队了，这也是公平锁和非公平锁的核心区别
+                // 一旦已经有线程在排队了，当前线程就不再尝试获取锁
                 if (!hasQueuedPredecessors() &&
                     compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);

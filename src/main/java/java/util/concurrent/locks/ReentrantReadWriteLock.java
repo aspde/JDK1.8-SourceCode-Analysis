@@ -668,6 +668,7 @@ public class ReentrantReadWriteLock
      */
     static final class NonfairSync extends Sync {
         private static final long serialVersionUID = -8159625535654395037L;
+        // 写锁并不容易插队成功，随时可以插队，读锁容易插队成功，要进一步判断
         final boolean writerShouldBlock() {
             return false; // writers can always barge
         }
@@ -688,6 +689,7 @@ public class ReentrantReadWriteLock
      */
     static final class FairSync extends Sync {
         private static final long serialVersionUID = -2274990926593161451L;
+        // 读写锁都不允许插队
         final boolean writerShouldBlock() {
             return hasQueuedPredecessors();
         }
