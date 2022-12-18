@@ -95,9 +95,11 @@ public class CopyOnWriteArrayList<E>
     private static final long serialVersionUID = 8673264195747942595L;
 
     /** The lock protecting all mutators */
+    // 用来保证修改操作的线程安全
     final transient ReentrantLock lock = new ReentrantLock();
 
     /** The array, accessed only via getArray/setArray. */
+    // 存储元素的数组，volatile修饰保证数组的可见性
     private transient volatile Object[] array;
 
     /**
@@ -384,6 +386,7 @@ public class CopyOnWriteArrayList<E>
     // Positional Access Operations
 
     @SuppressWarnings("unchecked")
+    // get相关的操作没有加锁，保证了读取操作的高速
     private E get(Object[] a, int index) {
         return (E) a[index];
     }
@@ -433,15 +436,21 @@ public class CopyOnWriteArrayList<E>
      */
     public boolean add(E e) {
         final ReentrantLock lock = this.lock;
+        // 加锁
         lock.lock();
         try {
+            // 得到原数组的长度和元素
             Object[] elements = getArray();
             int len = elements.length;
+            // 复制出一个和原数组内容相同的新数组
             Object[] newElements = Arrays.copyOf(elements, len + 1);
+            // 把新元素添加到新数组中
             newElements[len] = e;
+            // 转换引用所指向的对象
             setArray(newElements);
             return true;
         } finally {
+            // 解锁
             lock.unlock();
         }
     }
@@ -1140,6 +1149,7 @@ public class CopyOnWriteArrayList<E>
 
         private COWIterator(Object[] elements, int initialCursor) {
             cursor = initialCursor;
+            // 把当时的elements赋值给snapshot，而之后的迭代器所有的操作都基于snapshot数组进行的
             snapshot = elements;
         }
 
@@ -1155,6 +1165,7 @@ public class CopyOnWriteArrayList<E>
         public E next() {
             if (! hasNext())
                 throw new NoSuchElementException();
+            // 原数组被修改，snapshot既不会感知到，也不会受影响
             return (E) snapshot[cursor++];
         }
 

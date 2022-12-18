@@ -933,15 +933,20 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      */
     public V get(Object key) {
         Node<K,V>[] tab; Node<K,V> e, p; int n, eh; K ek;
+        // 计算hash值
         int h = spread(key.hashCode());
+        // 如果数组是空的或槽点的数据是空的，返回null
         if ((tab = table) != null && (n = tab.length) > 0 &&
             (e = tabAt(tab, (n - 1) & h)) != null) {
+            // 判断头节点是否是需要的节点，如果是直接返回
             if ((eh = e.hash) == h) {
                 if ((ek = e.key) == key || (ek != null && key.equals(ek)))
                     return e.val;
             }
+            // 如果头节点hash值小于0，说明是红黑树或正在扩容，用对应find方法查找
             else if (eh < 0)
                 return (p = e.find(h, key)) != null ? p.val : null;
+            // 遍历链表来查找
             while ((e = e.next) != null) {
                 if (e.hash == h &&
                     ((ek = e.key) == key || (ek != null && key.equals(ek))))
@@ -1009,27 +1014,37 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     /** Implementation for put and putIfAbsent */
     final V putVal(K key, V value, boolean onlyIfAbsent) {
         if (key == null || value == null) throw new NullPointerException();
+        // 计算hash值
         int hash = spread(key.hashCode());
         int binCount = 0;
         for (Node<K,V>[] tab = table;;) {
             Node<K,V> f; int n, i, fh;
+            // 如果数组是空的，就进行初始化
             if (tab == null || (n = tab.length) == 0)
                 tab = initTable();
+            // 找该hash值对应的数组下标
             else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+                // 如果该位置是空的，就用CAS的方式放入新值
                 if (casTabAt(tab, i, null,
                              new Node<K,V>(hash, key, value, null)))
                     break;                   // no lock when adding to empty bin
             }
+            // hash值等于MOVED代表在扩容
             else if ((fh = f.hash) == MOVED)
                 tab = helpTransfer(tab, f);
+            // 槽点上有值的情况
             else {
                 V oldVal = null;
+                // 用synchronized锁住当前槽点，保证并发安全
                 synchronized (f) {
                     if (tabAt(tab, i) == f) {
+                        // 如果是链表的形式
                         if (fh >= 0) {
                             binCount = 1;
+                            // 遍历链表
                             for (Node<K,V> e = f;; ++binCount) {
                                 K ek;
+                                // 如果发现该key已存在，就判断是否需要覆盖，然后返回
                                 if (e.hash == hash &&
                                     ((ek = e.key) == key ||
                                      (ek != null && key.equals(ek)))) {
@@ -1039,6 +1054,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                     break;
                                 }
                                 Node<K,V> pred = e;
+                                // 到了链表的2尾部也没有发现该key，说明之前不存在，把新值添加到链表的最后
                                 if ((e = e.next) == null) {
                                     pred.next = new Node<K,V>(hash, key,
                                                               value, null);
@@ -1046,9 +1062,11 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                                 }
                             }
                         }
+                        // 如果是红黑树的形式
                         else if (f instanceof TreeBin) {
                             Node<K,V> p;
                             binCount = 2;
+                            // 调用putTreeVal方法往红黑树里添加数据
                             if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
                                                            value)) != null) {
                                 oldVal = p.val;
@@ -1059,6 +1077,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     }
                 }
                 if (binCount != 0) {
+                    // 检查是否满足把链表转化为红黑树的条件
                     if (binCount >= TREEIFY_THRESHOLD)
                         treeifyBin(tab, i);
                     if (oldVal != null)
