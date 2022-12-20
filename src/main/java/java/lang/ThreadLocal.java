@@ -159,16 +159,21 @@ public class ThreadLocal<T> {
      * @return the current thread's value of this thread-local
      */
     public T get() {
+        // 获取当前线程的引用
         Thread t = Thread.currentThread();
+        // 获取当前线程的ThreadLocalMap
         ThreadLocalMap map = getMap(t);
         if (map != null) {
+            // 获取对应的Entry
             ThreadLocalMap.Entry e = map.getEntry(this);
             if (e != null) {
                 @SuppressWarnings("unchecked")
+                // 通过Entry拿到里面的value并返回
                 T result = (T)e.value;
                 return result;
             }
         }
+        // 创建ThreadLocalMap
         return setInitialValue();
     }
 
@@ -216,11 +221,15 @@ public class ThreadLocal<T> {
      *        this thread-local.
      */
     public void set(T value) {
+        // 获取当前线程的引用
         Thread t = Thread.currentThread();
+        // 获取当前线程的ThreadLocalMap
         ThreadLocalMap map = getMap(t);
         if (map != null) {
+            // this是当前ThreadLocal的引用
             map.set(this, value);
         } else {
+            // 创建ThreadLocalMap
             createMap(t, value);
         }
     }
@@ -251,6 +260,7 @@ public class ThreadLocal<T> {
      * @return the map
      */
     ThreadLocalMap getMap(Thread t) {
+        // 获取当前线程内的ThreadLocalMap对象
         return t.threadLocals;
     }
 
@@ -316,6 +326,7 @@ public class ThreadLocal<T> {
      * used, stale entries are guaranteed to be removed only when
      * the table starts running out of space.
      */
+    // 采用线性探测法解决hash冲突，继续寻找下一个空的格子
     static class ThreadLocalMap {
 
         /**
