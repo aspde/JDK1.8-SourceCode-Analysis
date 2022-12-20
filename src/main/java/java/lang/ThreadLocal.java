@@ -246,8 +246,10 @@ public class ThreadLocal<T> {
      * @since 1.5
      */
      public void remove() {
+         // 获取ThreadLocalMap引用
          ThreadLocalMap m = getMap(Thread.currentThread());
          if (m != null) {
+             // 把key所对应的value清理掉，便于value被GC回收
              m.remove(this);
          }
      }
@@ -337,6 +339,7 @@ public class ThreadLocal<T> {
          * entry can be expunged from table.  Such entries are referred to
          * as "stale entries" in the code that follows.
          */
+        // Entry继承WeakReference弱引用，避免内存泄露
         static class Entry extends WeakReference<ThreadLocal<?>> {
             /** The value associated with this ThreadLocal. */
             Object value;
