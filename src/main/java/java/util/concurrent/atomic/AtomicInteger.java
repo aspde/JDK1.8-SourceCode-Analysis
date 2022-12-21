@@ -55,16 +55,19 @@ public class AtomicInteger extends Number implements java.io.Serializable {
     private static final long serialVersionUID = 6214790243416807050L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
+    // 获取Unsafe实例
     private static final Unsafe unsafe = Unsafe.getUnsafe();
     private static final long valueOffset;
-
+    // 在类加载时执行
     static {
         try {
+            // 得到当前原子类的value的偏移量，并且赋给valueOffset
+            // 偏移量是在内存中的偏移地址，Unsafe是根据内存偏移地址获取数据的原值的
             valueOffset = unsafe.objectFieldOffset
                 (AtomicInteger.class.getDeclaredField("value"));
         } catch (Exception ex) { throw new Error(ex); }
     }
-
+    // 原子类存储的值的变量，被volatile修饰，可以保证在多线程之间看到的value是同一份，保证了可见性
     private volatile int value;
 
     /**
@@ -87,6 +90,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      *
      * @return the current value
      */
+    // 获取当前的值
     public final int get() {
         return value;
     }
@@ -116,6 +120,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @param newValue the new value
      * @return the previous value
      */
+    // 获取当前的值，并设置新的值
     public final int getAndSet(int newValue) {
         return unsafe.getAndSetInt(this, valueOffset, newValue);
     }
@@ -129,6 +134,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @return {@code true} if successful. False return indicates that
      * the actual value was not equal to the expected value.
      */
+    // 如果expect等于预期值，则以原子方式将该值更新为update
     public final boolean compareAndSet(int expect, int update) {
         return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
     }
@@ -154,6 +160,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      *
      * @return the previous value
      */
+    // 获取当前的值，并自增
     public final int getAndIncrement() {
         return unsafe.getAndAddInt(this, valueOffset, 1);
     }
@@ -163,6 +170,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      *
      * @return the previous value
      */
+    // 获取当前的值，并自减
     public final int getAndDecrement() {
         return unsafe.getAndAddInt(this, valueOffset, -1);
     }
@@ -173,6 +181,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * @param delta the value to add
      * @return the previous value
      */
+    // 获取当前的值，并加上预期的值，预期的值可以是正数也可以是负数
     public final int getAndAdd(int delta) {
         return unsafe.getAndAddInt(this, valueOffset, delta);
     }
