@@ -117,8 +117,10 @@ public class LongAdder extends Striped64 implements Serializable {
      */
     public long sum() {
         Cell[] as = cells; Cell a;
+        // 加上base
         long sum = base;
         if (as != null) {
+            // 把各个线程里的Cell累计求和，形成最终的总和
             for (int i = 0; i < as.length; ++i) {
                 if ((a = as[i]) != null)
                     sum += a.value;
