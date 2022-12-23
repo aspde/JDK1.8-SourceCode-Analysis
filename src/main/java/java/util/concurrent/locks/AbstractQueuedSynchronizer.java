@@ -1339,6 +1339,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
+            // 对之前阻塞的线程进行唤醒，让它们继续执行
             doReleaseShared();
             return true;
         }

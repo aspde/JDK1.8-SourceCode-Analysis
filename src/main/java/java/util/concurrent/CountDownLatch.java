@@ -158,13 +158,16 @@ public class CountDownLatch {
      * Synchronization control For CountDownLatch.
      * Uses AQS state to represent count.
      */
+    // 继承AQS，重写方法
     private static final class Sync extends AbstractQueuedSynchronizer {
         private static final long serialVersionUID = 4982264981922014374L;
 
+        // 给AQS中的state变量赋值，state代表还需要倒数的次数
         Sync(int count) {
             setState(count);
         }
 
+        // 获取在AQS中的state变量的值，state代表还需要倒数的次数
         int getCount() {
             return getState();
         }
@@ -175,12 +178,15 @@ public class CountDownLatch {
 
         protected boolean tryReleaseShared(int releases) {
             // Decrement count; signal when transition to zero
+            // for的死循环
             for (;;) {
                 int c = getState();
                 if (c == 0)
                     return false;
                 int nextc = c-1;
+                // 利用CAS尝试把nextc赋值到state上
                 if (compareAndSetState(c, nextc))
+                    // nextc为0，意味着本次倒数后恰好达到了规定的倒数次数，门闩应当在此时打开
                     return nextc == 0;
             }
         }
@@ -227,6 +233,7 @@ public class CountDownLatch {
      * @throws InterruptedException if the current thread is interrupted
      *         while waiting
      */
+    // 获取方法，调用此方法会把线程阻塞，直到倒数为0才能继续执行
     public void await() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
     }
@@ -287,6 +294,7 @@ public class CountDownLatch {
      *
      * <p>If the current count equals zero then nothing happens.
      */
+    // 释放方法
     public void countDown() {
         sync.releaseShared(1);
     }
