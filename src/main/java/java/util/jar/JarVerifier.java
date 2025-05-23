@@ -96,6 +96,8 @@ class JarVerifier {
     /** collect -DIGEST-MANIFEST values for blacklist */
     private List<Object> manifestDigests;
 
+    private Map<CodeSigner[], Map<String, Boolean>> signersToAlgs;
+
     public JarVerifier(String name, byte rawBytes[]) {
         manifestName = name;
         manifestRawBytes = rawBytes;
@@ -105,6 +107,7 @@ class JarVerifier {
         pendingBlocks = new ArrayList<>();
         baos = new ByteArrayOutputStream();
         manifestDigests = new ArrayList<>();
+        this.signersToAlgs = new HashMap();
     }
 
     /**
@@ -244,7 +247,7 @@ class JarVerifier {
         if (!parsingBlockOrSF) {
             JarEntry je = mev.getEntry();
             if ((je != null) && (je.signers == null)) {
-                je.signers = mev.verify(verifiedSigners, sigFileSigners);
+                je.signers = mev.verify(verifiedSigners, sigFileSigners, signersToAlgs);
                 je.certs = mapSignersToCertArray(je.signers);
             }
         } else {
